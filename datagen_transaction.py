@@ -13,10 +13,11 @@ from datagen_customer import headers
 
 fake = Faker()
 transaction_headers = [
+    'customer_id',
     'trans_num', 
     'trans_date', 
     'trans_time',
-    'unix_time', 
+    # 'unix_time', 
     'category', 
     'amt', 
     'is_fraud', 
@@ -27,7 +28,7 @@ transaction_headers = [
 
 # read this only once / built a map of merchant per category for easy lookup
 merchants = {}
-with open('data/merchants.csv', 'r') as merchants_file:
+with open('data/merchants.csv', 'r', encoding='utf-16') as merchants_file:
     csv_reader = csv.reader(merchants_file, delimiter='|')
     # skip header
     csv_reader.__next__()
@@ -67,7 +68,9 @@ class Customer:
             merch_long = fake.coordinate(center=float(cust_long),radius=rad)
 
             if (is_fraud == 0 and t[1] not in fraud_dates) or is_fraud == 1:
-                features = self.raw + t + [chosen_merchant, str(merch_lat), str(merch_long)]
+                features = [
+                    self.attrs['id']
+                ] + t[:3] + t[4:] + [chosen_merchant, str(merch_lat), str(merch_long)]
                 print("|".join(features))
 
 
@@ -110,7 +113,7 @@ def main(customer_file, profile_file, start_date, end_date, out_path=None, start
     # generate appropriate number of transactions
     with open(customer_file, 'r') as f:
         f.readline()
-        print("|".join(headers + transaction_headers))
+        print("|".join(transaction_headers))
         line_num = 0
         fail = False
         # skip lines out of range
